@@ -13,8 +13,10 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.elhardoum.mycryptoalerts.MainActivity;
 import com.elhardoum.mycryptoalerts.R;
 import com.elhardoum.mycryptoalerts.databinding.FragmentSlideshowBinding;
+import com.google.android.material.snackbar.Snackbar;
 
 public class AboutFragment extends Fragment {
 
@@ -24,6 +26,8 @@ public class AboutFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         setHasOptionsMenu(true);
+
+        ((MainActivity) getActivity()).testData();
 
         viewModel =
                 new ViewModelProvider(this).get(AboutViewModel.class);

@@ -1,11 +1,12 @@
 package com.elhardoum.mycryptoalerts;
 
 import android.os.Bundle;
-import android.view.MenuItem;
-import android.view.View;
 import android.view.Menu;
 
-import com.google.android.material.snackbar.Snackbar;
+import com.elhardoum.mycryptoalerts.viewmodels.Database;
+import com.elhardoum.mycryptoalerts.viewmodels.Setting;
+import com.elhardoum.mycryptoalerts.viewmodels.Quote;
+import com.elhardoum.mycryptoalerts.viewmodels.Symbol;
 import com.google.android.material.navigation.NavigationView;
 
 import androidx.navigation.NavController;
@@ -17,6 +18,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.elhardoum.mycryptoalerts.databinding.ActivityMainBinding;
 
+import java.util.Objects;
+
+import io.realm.Realm;
+
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
@@ -25,18 +30,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Realm.init(this);
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         setSupportActionBar(binding.appBarMain.toolbar);
-        /*binding.appBarMain.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });*/
+
         DrawerLayout drawer = binding.drawerLayout;
         NavigationView navigationView = binding.navView;
         // Passing each menu ID as a set of Ids because each
@@ -54,9 +54,6 @@ public class MainActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
-        /*MenuItem plusIcon = menu.findItem(R.id.add_item);
-        plusIcon.setVisible( getnav );*/
-
         return true;
     }
 
@@ -65,5 +62,15 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         return NavigationUI.navigateUp(navController, mAppBarConfiguration)
                 || super.onSupportNavigateUp();
+    }
+
+    public void testData() {
+        //Setting test = new Setting("test");
+
+        // all modifications to a realm must happen inside of a write block
+        /*Database.getThread().executeTransaction(transactionRealm -> {
+            Setting test = transactionRealm.where(Setting.class).equalTo("id", "test").findFirst();
+            test.setValue("updated @ " + new java.util.Date());
+        });*/
     }
 }
