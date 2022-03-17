@@ -1,6 +1,7 @@
 package com.elhardoum.mycryptoalerts;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 
 import com.elhardoum.mycryptoalerts.viewmodels.Database;
@@ -31,6 +32,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Realm.init(this);
+
+        this.testData();
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -64,13 +67,23 @@ public class MainActivity extends AppCompatActivity {
                 || super.onSupportNavigateUp();
     }
 
-    public void testData() {
-        //Setting test = new Setting("test");
+    public void testOptions() {
+        Thread t = Database.getSetting("test", value -> Log.d("DATA-READ", "value = " + value));
+        try { t.join(); } catch (Exception e) {}
 
-        // all modifications to a realm must happen inside of a write block
-        /*Database.getThread().executeTransaction(transactionRealm -> {
-            Setting test = transactionRealm.where(Setting.class).equalTo("id", "test").findFirst();
-            test.setValue("updated @ " + new java.util.Date());
-        });*/
+        t = Database.setSetting("test", "updated @ " + new java.util.Date(), k -> Log.d("DATA-READ", "@set"));
+        try { t.join(); } catch (Exception e) {}
+
+        Database.getSetting("test", value -> Log.d("DATA-READ", "@new value = " + value));
+    }
+
+    public void testData() {
+        Thread t = Database.getQuote("test-2", value -> Log.d("DATA-READ", "value = " + value + " @null " + (value.getValue() == null)));
+        try { t.join(); } catch (Exception e) {}
+
+        t = Database.setQuote("test-2", 1.1, new java.util.Date(), k -> Log.d("DATA-READ", "@set"));
+        try { t.join(); } catch (Exception e) {}
+
+        Database.getQuote("test-2", value -> Log.d("DATA-READ", "@new value = " + value));
     }
 }
