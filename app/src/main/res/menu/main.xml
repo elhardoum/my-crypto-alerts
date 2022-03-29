@@ -7,4 +7,12 @@
         app:showAsAction="always"
         android:icon="@drawable/plus_icon"
         />
+
+    <item
+        android:id="@+id/info_item"
+        android:title=""
+        app:showAsAction="always"
+        android:visible="false"
+        android:icon="@drawable/info_icon"
+        />
 </menu>

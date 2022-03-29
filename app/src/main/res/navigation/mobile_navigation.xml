@@ -12,6 +12,12 @@
         tools:layout="@layout/fragment_home" />
 
     <fragment
+        android:id="@+id/nav_symbol"
+        android:name="com.elhardoum.mycryptoalerts.ui.symbol.SymbolFragment"
+        android:label="@string/menu_symbol"
+        tools:layout="@layout/fragment_symbol" />
+
+    <fragment
         android:id="@+id/nav_settings"
         android:name="com.elhardoum.mycryptoalerts.ui.settings.SettingsFragment"
         android:label="@string/menu_settings"

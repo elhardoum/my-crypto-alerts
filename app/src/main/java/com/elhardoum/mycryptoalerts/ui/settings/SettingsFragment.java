@@ -14,12 +14,12 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.elhardoum.mycryptoalerts.R;
-import com.elhardoum.mycryptoalerts.databinding.FragmentGalleryBinding;
+import com.elhardoum.mycryptoalerts.databinding.FragmentSettingsBinding;
 
 public class SettingsFragment extends Fragment {
 
     private SettingsViewModel viewModel;
-    private FragmentGalleryBinding binding;
+    private FragmentSettingsBinding binding;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -28,7 +28,7 @@ public class SettingsFragment extends Fragment {
         viewModel =
                 new ViewModelProvider(this).get(SettingsViewModel.class);
 
-        binding = FragmentGalleryBinding.inflate(inflater, container, false);
+        binding = FragmentSettingsBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
         final TextView textView = binding.textSettings;
