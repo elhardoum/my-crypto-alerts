@@ -51,6 +51,14 @@ public class HomeFragment extends Fragment {
 
         Database.getSymbols(items ->
         {
+            if ( 0 == items.size() ) {
+                binding.textHomeNoItems.setVisibility(View.VISIBLE);
+                binding.llayoutMain.setVisibility(View.GONE);
+            } else  {
+                binding.textHomeNoItems.setVisibility(View.GONE);
+                binding.llayoutMain.setVisibility(View.VISIBLE);
+            }
+
             for ( Symbol item: items ) {
                 final String itemId = item.getId();
 
@@ -71,10 +79,6 @@ public class HomeFragment extends Fragment {
 
                 for ( int i=0; i<cols.length; i++ ) {
                     TextView text = new TextView(getActivity().getBaseContext());
-
-                    /*text.setLayoutParams(new ViewGroup.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT));*/
 
                     text.setTextSize(15);
                     text.setText(cols[i]);

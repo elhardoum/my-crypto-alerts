@@ -19,4 +19,8 @@
     <string name="symbol">Symbol (click info for help)</string>
     <string name="movement_input_hint">Movement % (use - for downward trends)</string>
     <string name="submit">SUBMIT</string>
+    <string name="notifications_threshold">Notifications interval (in minutes, min 15)</string>
+    <string name="save_changes">SAVE CHANGES</string>
+    <string name="about_header">My Crypto Alerts</string>
+    <string name="about_content">My Crypto Alerts is an open-source mobile application for android devices. It makes it easy to select a list of preferred coins, and monitor their price changes live and set up custom alerts, through push notifications.\n\nThe project uses the live quotes API provided by coingecko.com. For more information, please review their API Terms of Service at https://www.coingecko.com/en/api_terms</string>
 </resources>

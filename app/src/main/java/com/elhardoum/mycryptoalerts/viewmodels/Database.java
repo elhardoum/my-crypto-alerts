@@ -47,6 +47,7 @@ public class Database {
                 getThread().executeTransactionAsync(transactionRealm -> {
                     Setting opt = transactionRealm.where(Setting.class).equalTo("id", id).findFirst();
                     then.accept(opt == null ? "" : opt.getValue());
+                    // transactionRealm.close();
                 });
             }
         });
@@ -72,6 +73,7 @@ public class Database {
 
                     opt.setValue(value);
                     then.accept(true);
+                    // transactionRealm.close();
                 });
             }
         });
@@ -91,6 +93,7 @@ public class Database {
                 getThread().executeTransactionAsync(transactionRealm -> {
                     Quote quote = transactionRealm.where(Quote.class).equalTo("id", id).findFirst();
                     then.accept(quote == null ? new Quote() : quote);
+                    // transactionRealm.close();
                 });
             }
         });
@@ -117,6 +120,7 @@ public class Database {
                     quote.setValue(value);
                     quote.setFetched(fetched);
                     then.accept(true);
+                    // transactionRealm.close();
                 });
             }
         });
@@ -137,6 +141,7 @@ public class Database {
                     RealmResults<Symbol> symbols = transactionRealm.where(Symbol.class)
                             .findAll().sort("id", Sort.DESCENDING);
                     then.accept(symbols);
+                    // transactionRealm.close();
                 });
             }
         });
@@ -170,6 +175,7 @@ public class Database {
                     sym.setNotifications(notifications);
 
                     then.accept(true);
+                    // transactionRealm.close();
                 });
             }
         });
@@ -189,6 +195,7 @@ public class Database {
                 getThread().executeTransactionAsync(transactionRealm -> {
                     Symbol sym = transactionRealm.where(Symbol.class).equalTo("id", id).findFirst();
                     then.accept(sym == null ? new Symbol() : sym);
+                    // transactionRealm.close();
                 });
             }
         });
@@ -209,6 +216,7 @@ public class Database {
                     RealmResults<Symbol> symbols = transactionRealm.where(Symbol.class).equalTo("id", id).findAll();
                     symbols.deleteAllFromRealm();
                     then.accept(true);
+                    // transactionRealm.close();
                 });
             }
         });
