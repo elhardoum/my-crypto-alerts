@@ -1,6 +1,9 @@
 package com.elhardoum.mycryptoalerts.viewmodels;
 
 import android.text.TextUtils;
+import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import org.bson.types.ObjectId;
 import org.json.JSONException;
@@ -21,7 +24,10 @@ import io.realm.RealmResults;
 import io.realm.Sort;
 
 public class Database {
+    private final static Database INSTANCE = new Database();
+
     private static RealmConfiguration config;
+    private static boolean useThreads = false;
 
     public static Realm getThread()
     {
@@ -37,195 +43,180 @@ public class Database {
         return Realm.getDefaultInstance();
     }
 
-    public static Thread getSetting( String id, Consumer<String> then )
+    private static void executeTransactionWrapper(Consumer<Realm> callback)
     {
-        final String[] value = new String[1];
+        if ( useThreads ) {
+            executeInThread(callback);
+        } else {
+            executeTransaction(callback);
+        }
+    }
 
-        Thread thread = new Thread(new Runnable() {
+    private static void executeTransactionWrapper( boolean threads, Consumer<Realm> callback)
+    {
+        if ( threads ) {
+            executeInThread(callback);
+        } else {
+            executeTransaction(callback);
+        }
+    }
+
+    private static void executeTransaction(Consumer<Realm> callback)
+    {
+        Realm realm = getThread();
+
+        realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
-            public void run() {
-                getThread().executeTransactionAsync(transactionRealm -> {
-                    Setting opt = transactionRealm.where(Setting.class).equalTo("id", id).findFirst();
-                    then.accept(opt == null ? "" : opt.getValue());
-                    // transactionRealm.close();
-                });
+            public void execute(Realm bgRealm) {
+                callback.accept(bgRealm);
             }
+        }, realm::close, new Realm.Transaction.OnError() {
+            @Override
+            public void onError(@NonNull Throwable error) {
+                Log.e("DATA", "realm transaction exception", error);
+                realm.close();
+            }
+        });
+    }
+
+    private static Thread executeInThread(Consumer<Realm> callback)
+    {
+        Thread thread = new Thread(() ->
+        {
+            Realm realm = getThread();
+
+            realm.executeTransactionAsync(new Realm.Transaction() {
+                @Override
+                public void execute(Realm bgRealm) {
+                    callback.accept(bgRealm);
+                }
+            });
         });
 
         thread.start();
 
-        try { thread.join(); } catch (Exception e) {}
+        try { thread.join(); } catch (Exception e) {
+            Log.e("DATA", "Thread exception", e);
+        }
 
         return thread;
     }
 
-    public static Thread setSetting( String id, String value, Consumer<Boolean> then )
+    public static void getSetting( String id, Consumer<String> then )
     {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                getThread().executeTransactionAsync(transactionRealm -> {
-                    Setting opt = transactionRealm.where(Setting.class).equalTo("id", id).findFirst();
-
-                    if ( null == opt ) { // create new
-                        opt = transactionRealm.createObject(Setting.class, id);
-                    }
-
-                    opt.setValue(value);
-                    then.accept(true);
-                    // transactionRealm.close();
-                });
-            }
+        executeTransactionWrapper(transactionRealm -> {
+            Setting opt = transactionRealm.where(Setting.class).equalTo("id", id).findFirst();
+            then.accept(opt == null ? "" : opt.getValue());
         });
-
-        thread.start();
-
-        try { thread.join(); } catch (Exception e) {}
-
-        return thread;
     }
 
-    public static Thread getQuote( String id, Consumer<Quote> then )
+    public static void setSetting( String id, String value, Consumer<Boolean> then )
     {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                getThread().executeTransactionAsync(transactionRealm -> {
-                    Quote quote = transactionRealm.where(Quote.class).equalTo("id", id).findFirst();
-                    then.accept(quote == null ? new Quote() : quote);
-                    // transactionRealm.close();
-                });
+        executeTransactionWrapper(transactionRealm -> {
+            Setting opt = transactionRealm.where(Setting.class).equalTo("id", id).findFirst();
+
+            if ( null == opt ) { // create new
+                opt = transactionRealm.createObject(Setting.class, id);
             }
+
+            opt.setValue(value);
+            then.accept(true);
         });
-
-        thread.start();
-
-        try { thread.join(); } catch (Exception e) {}
-
-        return thread;
     }
 
-    public static Thread setQuote( String id, Double value, Date fetched, Consumer<Boolean> then )
+    public static void getQuote( String id, Consumer<Quote> then, boolean threads )
     {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                getThread().executeTransactionAsync(transactionRealm -> {
-                    Quote quote = transactionRealm.where(Quote.class).equalTo("id", id).findFirst();
-
-                    if ( null == quote ) { // create new
-                        quote = transactionRealm.createObject(Quote.class, id);
-                    }
-
-                    quote.setValue(value);
-                    quote.setFetched(fetched);
-                    then.accept(true);
-                    // transactionRealm.close();
-                });
-            }
+        executeTransactionWrapper(threads, transactionRealm -> {
+            Quote quote = transactionRealm.where(Quote.class).equalTo("id", id).findFirst();
+            then.accept(quote == null ? new Quote() : quote);
         });
-
-        thread.start();
-
-        try { thread.join(); } catch (Exception e) {}
-
-        return thread;
     }
 
-    public static Thread getSymbols( Consumer<RealmResults<Symbol>> then )
+    public static void setQuote( String id, Double value, Date fetched, Consumer<Boolean> then, boolean threads )
     {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                getThread().executeTransactionAsync(transactionRealm -> {
-                    RealmResults<Symbol> symbols = transactionRealm.where(Symbol.class)
-                            .findAll().sort("id", Sort.DESCENDING);
-                    then.accept(symbols);
-                    // transactionRealm.close();
-                });
+        executeTransactionWrapper(threads, transactionRealm -> {
+            Quote quote = transactionRealm.where(Quote.class).equalTo("id", id).findFirst();
+
+            if ( null == quote ) { // create new
+                quote = transactionRealm.createObject(Quote.class, id);
             }
+
+            quote.setValue(value);
+            quote.setFetched(fetched);
+            then.accept(true);
         });
-
-        thread.start();
-
-        try { thread.join(); } catch (Exception e) {}
-
-        return thread;
     }
 
-    public static Thread setSymbol( String id, String coinId, String symbol, Double movement, Integer notifications, Consumer<Boolean> then )
+    public static void getSymbols( Consumer<RealmResults<Symbol>> then )
     {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                getThread().executeTransaction(transactionRealm -> {
-                    Symbol sym = null;
-
-                    if ( id.length() > 0 ) {
-                        sym = transactionRealm.where(Symbol.class).equalTo("id", id).findFirst();
-                    }
-
-                    if ( null == sym ) { // create new
-                        sym = transactionRealm.createObject(Symbol.class, new ObjectId().toString());
-                    }
-
-                    sym.setCoinId(coinId);
-                    sym.setSymbol(symbol);
-                    sym.setMovement(movement);
-                    sym.setNotifications(notifications);
-
-                    then.accept(true);
-                    // transactionRealm.close();
-                });
-            }
+        executeTransactionWrapper(transactionRealm -> {
+            RealmResults<Symbol> symbols = transactionRealm.where(Symbol.class)
+                    .findAll().sort("id", Sort.DESCENDING);
+            then.accept(symbols);
         });
-
-        thread.start();
-
-        try { thread.join(); } catch (Exception e) {}
-
-        return thread;
     }
 
-    public static Thread getSymbol( String id, Consumer<Symbol> then )
+    public static void getSymbols( boolean thread, Consumer<RealmResults<Symbol>> then )
     {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                getThread().executeTransactionAsync(transactionRealm -> {
-                    Symbol sym = transactionRealm.where(Symbol.class).equalTo("id", id).findFirst();
-                    then.accept(sym == null ? new Symbol() : sym);
-                    // transactionRealm.close();
-                });
-            }
+        executeTransactionWrapper(thread, transactionRealm -> {
+            RealmResults<Symbol> symbols = transactionRealm.where(Symbol.class)
+                    .findAll().sort("id", Sort.DESCENDING);
+            then.accept(symbols);
         });
-
-        thread.start();
-
-        try { thread.join(); } catch (Exception e) {}
-
-        return thread;
     }
 
-    public static Thread deleteSymbol( String id, Consumer<Boolean> then )
+    public static void setSymbol( String id, String coinId, String symbol, Double movement, Integer notifications, Consumer<Boolean> then )
     {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                getThread().executeTransaction(transactionRealm -> {
-                    RealmResults<Symbol> symbols = transactionRealm.where(Symbol.class).equalTo("id", id).findAll();
-                    symbols.deleteAllFromRealm();
-                    then.accept(true);
-                    // transactionRealm.close();
-                });
+        executeTransactionWrapper(transactionRealm -> {
+            Symbol sym = null;
+
+            if ( id.length() > 0 ) {
+                sym = transactionRealm.where(Symbol.class).equalTo("id", id).findFirst();
             }
+
+            if ( null == sym ) { // create new
+                sym = transactionRealm.createObject(Symbol.class, new ObjectId().toString());
+            }
+
+            sym.setCoinId(coinId);
+            sym.setSymbol(symbol);
+            sym.setMovement(movement);
+            sym.setNotifications(notifications);
+
+            then.accept(true);
         });
+    }
 
-        thread.start();
+    public static void incrNotification( String id, Consumer<Boolean> then, boolean theads )
+    {
+        executeTransactionWrapper(theads, transactionRealm -> {
+            Symbol sym = transactionRealm.where(Symbol.class).equalTo("id", id).findFirst();
 
-        try { thread.join(); } catch (Exception e) {}
+            if ( null == sym ) {
+                then.accept(false);
+                return;
+            }
 
-        return thread;
+            sym.setNotifications(sym.getNotifications()+1);
+            then.accept(true);
+        });
+    }
+
+    public static void getSymbol( String id, Consumer<Symbol> then )
+    {
+        executeTransactionWrapper(transactionRealm -> {
+            Symbol sym = transactionRealm.where(Symbol.class).equalTo("id", id).findFirst();
+            then.accept(sym == null ? new Symbol() : sym);
+        });
+    }
+
+    public static void deleteSymbol( String id, Consumer<Boolean> then )
+    {
+        executeTransactionWrapper(transactionRealm -> {
+            RealmResults<Symbol> symbols = transactionRealm.where(Symbol.class).equalTo("id", id).findAll();
+            symbols.deleteAllFromRealm();
+            then.accept(true);
+        });
     }
 
     public static void getSupportedCrypto( Consumer<HashMap<String, HashMap<String, String>>> then )
@@ -239,7 +230,7 @@ public class Database {
                 try {
                     connection = new URL("https://api.coingecko.com/api/v3/coins/list").openConnection();
                 } catch (IOException e) {
-                    android.util.Log.e("API", "Error getting url", e);
+                    Log.e("API", "Error getting url", e);
                     then.accept(null);
                     return;
                 }
@@ -248,7 +239,7 @@ public class Database {
                 try {
                     scanner = new Scanner(connection.getInputStream());
                 } catch (IOException e) {
-                    android.util.Log.e("API", "Error getting url", e);
+                    Log.e("API", "Error getting url", e);
                     then.accept(null);
                     return;
                 }
@@ -258,7 +249,7 @@ public class Database {
                 try {
                     obj = new JSONArray(response);
                 } catch (JSONException e) {
-                    android.util.Log.e("API", "Error parsing json", e);
+                    Log.e("API", "Error parsing json", e);
                     then.accept(null);
                     return;
                 }
@@ -268,7 +259,7 @@ public class Database {
                 try {
                     obj = new JSONArray(data);
                 } catch (JSONException e) {
-                    android.util.Log.e("API", "Error parsing json", e);
+                    Log.e("API", "Error parsing json", e);
                     then.accept(null);
                     return;
                 }

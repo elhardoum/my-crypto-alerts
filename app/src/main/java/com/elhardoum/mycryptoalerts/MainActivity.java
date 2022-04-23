@@ -1,6 +1,17 @@
 package com.elhardoum.mycryptoalerts;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -13,6 +24,8 @@ import com.elhardoum.mycryptoalerts.viewmodels.Symbol;
 import com.google.android.material.navigation.NavigationView;
 
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -37,7 +50,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
 
+        // init database configuration
         Realm.init(this);
+
+        // init background jobs
+        jobScheduler();
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -84,4 +101,33 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public NavController getNavController() { return navController; }
+
+    private void jobScheduler()
+    {
+        Database.getSetting("notifications_threshold", data ->
+        {
+            runOnUiThread(() ->
+            {
+                long minutes = 0;
+
+                try {
+                    minutes = Long.parseLong(data);
+                } catch (Exception e) {}
+
+                minutes = minutes <= 15 ? 15 : minutes;
+                
+                PersistableBundle bundle = new PersistableBundle();
+                bundle.putLong("interval_minutes", minutes);
+
+                JobInfo.Builder builder = new JobInfo.Builder(1, new ComponentName(this, BackgroundJobs.class))
+                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                        .setPersisted(true)
+                        .setExtras(bundle)
+                        .setPeriodic(minutes * 60 * 1000, minutes * 60 * 1000);
+
+                JobScheduler scheduler = (JobScheduler) getSystemService(JOB_SCHEDULER_SERVICE);
+                scheduler.schedule(builder.build());
+            });
+        });
+    }
 }
