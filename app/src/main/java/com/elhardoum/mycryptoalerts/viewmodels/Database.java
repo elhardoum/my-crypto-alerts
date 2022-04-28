@@ -124,6 +124,20 @@ public class Database {
         });
     }
 
+    public static void setSetting( String id, String value, boolean threads, Consumer<Boolean> then )
+    {
+        executeTransactionWrapper(threads, transactionRealm -> {
+            Setting opt = transactionRealm.where(Setting.class).equalTo("id", id).findFirst();
+
+            if ( null == opt ) { // create new
+                opt = transactionRealm.createObject(Setting.class, id);
+            }
+
+            opt.setValue(value);
+            then.accept(true);
+        });
+    }
+
     public static void getQuote( String id, Consumer<Quote> then, boolean threads )
     {
         executeTransactionWrapper(threads, transactionRealm -> {
@@ -254,7 +268,7 @@ public class Database {
                     return;
                 }
 
-                Database.setSetting("supported-crypto", obj.toString(), k -> {});
+                Database.setSetting("supported-crypto", obj.toString(), true, k -> {});
             } else {
                 try {
                     obj = new JSONArray(data);

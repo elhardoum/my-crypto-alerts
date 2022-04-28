@@ -115,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
                 } catch (Exception e) {}
 
                 minutes = minutes <= 15 ? 15 : minutes;
-                
+
                 PersistableBundle bundle = new PersistableBundle();
                 bundle.putLong("interval_minutes", minutes);
 

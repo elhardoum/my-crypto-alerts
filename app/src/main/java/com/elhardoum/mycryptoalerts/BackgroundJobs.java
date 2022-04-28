@@ -38,8 +38,6 @@ public class BackgroundJobs extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
-        Log.d("JOB", ">> started");
-
         PersistableBundle bundle = jobParameters.getExtras();
 
         UpdateQuotes task = new UpdateQuotes();
@@ -96,7 +94,7 @@ public class BackgroundJobs extends JobService {
                                         );
 
                                         showNotification(
-                                                Math.abs(new Random().nextInt()),
+                                                item.getId().hashCode(),
                                                 BackgroundJobs.this,
                                                 String.format("%s is %s %s%%",
                                                         item.getSymbol().toUpperCase(Locale.ROOT),

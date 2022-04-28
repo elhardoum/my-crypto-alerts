@@ -48,12 +48,9 @@ public class HomeFragment extends Fragment {
 
         binding.layoutLoadingSpinner.setVisibility(View.VISIBLE);
         binding.layoutMainContent.setVisibility(View.GONE);
-        android.util.Log.d("GET-DATA", "1");
 
         Database.getSymbols(items ->
         {
-            android.util.Log.d("DATA-SIZE", "" + items.size());
-
             if ( 0 == items.size() ) {
                 binding.textHomeNoItems.setVisibility(View.VISIBLE);
                 binding.llayoutMain.setVisibility(View.GONE);
